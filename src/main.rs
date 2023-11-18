@@ -1,7 +1,7 @@
 mod camera;
 mod ray;
 mod interval;
-mod hittable;
+mod primitive;
 mod timer;
 
 use image::{RgbImage, ImageBuffer, Rgb};
@@ -10,7 +10,10 @@ use nalgebra_glm::Vec3;
 use ray::Ray;
 use interval::Interval;
 use camera::{Resolution, Camera};
-use hittable::{Hittable, HittablePrimitive, Sphere, RayHit};
+use primitive::{
+    Hittable, HittablePrimitive, RayHit,
+    sphere::Sphere,
+};
 use timer::Timer;
 
 pub struct Scene

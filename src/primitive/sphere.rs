@@ -1,49 +1,8 @@
 use nalgebra_glm::Vec3;
 
-use super::interval::Interval;
-use super::ray::Ray;
-
-#[derive(Debug)]
-pub struct RayHit {
-    pub depth: f32,
-    pub position: Vec3,
-    pub normal: Vec3,
-}
-
-impl RayHit {
-    pub fn new<P>(depth: f32, position: Vec3, ray: &Ray, primitive: &P) -> Self
-    where
-        P: Primitive
-    {
-        let mut normal = primitive.normal(&position);
-
-        // Dot product N * D is positive if vectors are aligned (i.e. the ray comes from inside the object!)
-        let hit_from_inside = normal.dot(ray.direction()) > 0.0;
-        if hit_from_inside {
-            normal = primitive.inverted_normal(&position);
-        }
-
-        RayHit {
-            depth,
-            position,
-            normal
-        }
-    }
-}
-
-pub trait Primitive {
-    fn normal(&self, location: &Vec3) -> Vec3;
-
-    fn inverted_normal(&self, location: &Vec3) -> Vec3;
-}
-
-pub trait Hittable {
-    fn hit(&self, ray: &Ray, interval: &Interval) -> Option<RayHit>;
-}
-
-pub trait HittablePrimitive: Hittable + Primitive {
-    //
-}
+use super::{Primitive, Hittable, HittablePrimitive, RayHit};
+use crate::interval::Interval;
+use crate::ray::Ray;
 
 pub struct Sphere {
     position: Vec3,
@@ -58,14 +17,6 @@ impl Sphere {
             radius,
             radius_squared: radius * radius
         }
-    }
-
-    pub fn position(&self) -> &Vec3 {
-        &self.position
-    }
-
-    pub fn radius(&self) -> f32 {
-        self.radius
     }
 }
 
@@ -94,7 +45,7 @@ impl Hittable for Sphere {
         // Beware: Expensive calculations below!
         let mut depth = (-half_b - f32::sqrt(disciminant)) / a;
         if !interval.surrounds(depth) {
-            // Check if ray comes from inside the sphere
+            // Check if ray comes from inside the sphere (Note the '+' instead of '-')
             depth = (-half_b + f32::sqrt(disciminant)) / a;
             if !interval.surrounds(depth)
             {
@@ -107,6 +58,4 @@ impl Hittable for Sphere {
     }
 }
 
-impl HittablePrimitive for Sphere {
-    // XXX: Empty combined trait
-}
+impl HittablePrimitive for Sphere {}
