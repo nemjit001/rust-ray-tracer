@@ -2,6 +2,7 @@ mod camera;
 mod ray;
 mod interval;
 mod primitive;
+mod scene;
 mod timer;
 
 use image::{RgbImage, ImageBuffer, Rgb};
@@ -11,54 +12,11 @@ use ray::Ray;
 use interval::Interval;
 use camera::{Resolution, Camera};
 use primitive::{
-    Hittable, HittablePrimitive, RayHit,
+    Hittable,
     sphere::Sphere,
 };
+use scene::Scene;
 use timer::Timer;
-
-pub struct Scene
-{
-    primitives: Vec<Box<dyn HittablePrimitive>>,
-}
-
-impl Scene
-{
-    pub fn new(primitives: Vec<Box<dyn HittablePrimitive>>) -> Self {
-        Scene {
-            primitives
-        }
-    }
-}
-
-impl Hittable for Scene
-{
-    fn hit(&self, ray: &Ray, interval: &Interval) -> Option<RayHit> {
-        let mut closest_hit: Option<RayHit> = None;
-
-        for primitive in &self.primitives {
-            let closest_depth = match &closest_hit {
-                Some(hit) => hit.depth,
-                None => interval.max(),
-            };
-
-            if let Some(hit) = primitive.hit(ray, &Interval::new(interval.min(), closest_depth)) {
-                closest_hit = match closest_hit {
-                    Some(closest) => {
-                        if hit.depth < closest.depth {
-                            Some(hit)
-                        }
-                        else {
-                            Some(closest)
-                        }
-                    },
-                    None => Some(hit),
-                };
-            }
-        }
-
-        closest_hit
-    }
-}
 
 pub struct Renderer {
     render_target: RgbImage,

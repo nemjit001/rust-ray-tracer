@@ -15,7 +15,7 @@ impl Interval {
         Interval::new(f32::INFINITY, f32::NEG_INFINITY)
     }
 
-    pub fn univers() -> Self {
+    pub fn universe() -> Self {
         Interval::new(f32::NEG_INFINITY, f32::INFINITY)
     }
 
@@ -33,5 +33,40 @@ impl Interval {
 
     pub fn surrounds(&self, value: f32) -> bool {
         self.min() < value && value < self.max()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_empty() {
+        let interval = Interval::empty();
+        assert!(!interval.contains(0.0))
+    }
+
+    #[test]
+    fn test_universe() {
+        let interval = Interval::universe();
+        assert!(interval.contains(0.0))
+    }
+
+    #[test]
+    fn test_contains() {
+        let interval = Interval::new(0.0, 10.0);
+        assert!(interval.contains(5.0));
+        assert!(interval.contains(0.0));
+        assert!(interval.contains(10.0));
+        assert!(!interval.contains(-42.0));
+    }
+
+    #[test]
+    fn test_surrounds() {
+        let interval = Interval::new(0.0, 10.0);
+        assert!(interval.surrounds(5.0));
+        assert!(!interval.surrounds(0.0));
+        assert!(!interval.surrounds(10.0));
+        assert!(!interval.surrounds(-42.0));
     }
 }
