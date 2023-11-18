@@ -97,7 +97,7 @@ fn main() {
     println!("Raytracing in one Weekend!");
 
     let render_resolution = Resolution::new(1280, 720);
-    let mut renderer = Renderer::new(&render_resolution, 4);
+    let mut renderer = Renderer::new(&render_resolution, 32);
     let camera = Camera::new(
         Vec3::new(0.0, 1.0, 4.0),
         2.0,
@@ -108,7 +108,7 @@ fn main() {
 
     let scene = Scene::new(vec![
         Box::new(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 50.0)),      // Sky dome
-        Box::new(Sphere::new(Vec3::new(0.0, -100.0, 0.0), 100.0)), // Ground
+        Box::new(Sphere::new(Vec3::new(0.0, -100.0, 0.0), 100.0)),  // Ground
         // Primitives below
         Box::new(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0)),
         Box::new(Sphere::new(Vec3::new(3.0, 1.0, -1.0), 1.0)),
