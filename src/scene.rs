@@ -1,18 +1,33 @@
+use nalgebra_glm::Vec3;
+
 use super::interval::Interval;
 use super::ray::Ray;
 use super::primitive::{HittablePrimitive, Hittable, RayHit};
 
+pub struct SkyAttenuation {
+    pub light_color: Vec3,
+    pub sky_color: Vec3,
+}
+
 pub struct Scene
 {
+    sky_attenuation: SkyAttenuation,
     primitives: Vec<Box<dyn HittablePrimitive>>,
 }
 
 impl Scene
 {
-    pub fn new(primitives: Vec<Box<dyn HittablePrimitive>>) -> Self {
+    pub fn new(sky_attenuation: SkyAttenuation, primitives: Vec<Box<dyn HittablePrimitive>>) -> Self {
         Scene {
-            primitives
+            sky_attenuation,
+            primitives,
         }
+    }
+
+    pub fn get_sky_color(&self, ray: &Ray) -> Vec3 {
+        let a = 0.5 * (ray.direction().y + 1.0);
+
+        (1.0 - a) * self.sky_attenuation.light_color + a * self.sky_attenuation.sky_color
     }
 }
 
