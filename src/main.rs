@@ -159,7 +159,6 @@ fn main() {
             sky_color: Vec3::new(0.2, 0.7, 1.0),
         },
         vec![
-            // Box::new(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 50.0)),      // Sky dome
             Box::new(Sphere::new(Vec3::new(0.0, -100.0, 0.0), 100.0)),  // Ground
             // Primitives below
             Box::new(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0)),
