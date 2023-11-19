@@ -3,19 +3,22 @@ use nalgebra_glm::Vec3;
 use super::{Primitive, Hittable, HittablePrimitive, RayHit};
 use crate::interval::Interval;
 use crate::ray::Ray;
+use crate::material::Material;
 
 pub struct Sphere {
     position: Vec3,
     radius: f32,
-    radius_squared: f32
+    radius_squared: f32,
+    material: Box<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(position: Vec3, radius: f32) -> Self {
+    pub fn new(position: Vec3, radius: f32, material: Box<dyn Material>) -> Self {
         Sphere {
             position,
             radius,
-            radius_squared: radius * radius
+            radius_squared: radius * radius,
+            material,
         }
     }
 }
@@ -27,6 +30,10 @@ impl Primitive for Sphere {
 
     fn inverted_normal(&self, location: &Vec3) -> Vec3 {
         -self.normal(location)
+    }
+
+    fn material(&self) -> &Box<dyn Material> {
+        &self.material
     }
 }
 

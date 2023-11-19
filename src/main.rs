@@ -2,13 +2,13 @@ mod camera;
 mod ray;
 mod interval;
 mod primitive;
+mod material;
 mod scene;
 mod timer;
 
 use image::{RgbImage, ImageBuffer, Rgb};
 use nalgebra_glm::Vec3;
 
-use rand::Rng;
 use ray::Ray;
 use interval::Interval;
 use camera::{Resolution, Camera};
@@ -16,6 +16,7 @@ use primitive::{
     Hittable,
     sphere::Sphere,
 };
+use material::{LambertianDiffuse, Metal};
 use scene::{SkyAttenuation, Scene};
 use timer::Timer;
 
@@ -68,21 +69,20 @@ impl Renderer {
 
     fn bounce_ray(&self, ray: &Ray, scene: &Scene, z_interval: &Interval, depth: u32) -> Vec3 {
         if depth == 0 {
-            return Vec3::new(0.0, 0.0, 0.0)
+            return Vec3::zeros();
         }
 
-        let closest_hit = scene.hit(&ray, z_interval);
+        let closest_hit = scene.hit(ray, z_interval);
         match closest_hit {
             Some(hit) => {
-                let direction = hit.normal + Self::random_on_unit_sphere();
-                let ray = Ray::new(hit.position, direction);
-                return 0.5 * self.bounce_ray(&ray, scene, z_interval, depth - 1);
+                let scatter = hit.material.scatter(ray, &hit);
 
-                // return 0.5 * (hit.normal + Vec3::new(1.0, 1.0, 1.0));
-                // return hit.position;
-
-                // let depth = (hit.depth + z_interval.min()) / z_interval.max();
-                // return Vec3::new(depth, depth, depth);
+                match scatter {
+                    Some(scatter) => {
+                        return scatter.attenuation.component_mul(&self.bounce_ray(&scatter.ray, scene, z_interval, depth - 1));
+                    },
+                    None => return Vec3::zeros(),
+                }
             }
             None => {
                 return scene.get_sky_color(&ray);
@@ -119,36 +119,17 @@ impl Renderer {
         let out_color = Self::rgb_to_gamma(out_color);
         Self::vec3_to_color(&out_color)
     }
-
-    fn random_vector() -> Vec3 {
-        let mut rng = rand::thread_rng();
-
-        Vec3::new(
-            rng.gen_range(0.0..1.0),
-            rng.gen_range(0.0..1.0),
-            rng.gen_range(0.0..1.0),
-        )
-    }
-
-    fn random_on_unit_sphere() -> Vec3 {
-        loop {
-            let vec = Self::random_vector();
-            if vec.magnitude_squared() < 1.0 {
-                return vec.normalize()
-            }
-        }
-    }
 }
 
 fn main() {
     println!("Raytracing in one Weekend!");
 
     let render_resolution = Resolution::new(1280, 720);
-    let mut renderer = Renderer::new(&render_resolution, 16, 100);
+    let mut renderer = Renderer::new(&render_resolution, 128, 50);
     let camera = Camera::new(
         Vec3::new(0.0, 1.0, 4.0),
         2.0,
-        Interval::new(0.1, 100.0),
+        Interval::new(0.001, 100.0),
         &render_resolution
     );
     let mut timer = Timer::new();
@@ -159,11 +140,11 @@ fn main() {
             sky_color: Vec3::new(0.2, 0.7, 1.0),
         },
         vec![
-            Box::new(Sphere::new(Vec3::new(0.0, -100.0, 0.0), 100.0)),  // Ground
+            Box::new(Sphere::new(Vec3::new(0.0, -100.0, 0.0), 100.0, Box::new(LambertianDiffuse::new(Vec3::new(0.2, 0.2, 0.3))))),  // Ground
             // Primitives below
-            Box::new(Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0)),
-            Box::new(Sphere::new(Vec3::new(3.0, 1.0, -1.0), 1.0)),
-            Box::new(Sphere::new(Vec3::new(-2.0, 1.0, 0.0), 0.5)),
+            Box::new(Sphere::new(Vec3::new( 0.0, 1.0, -1.0), 1.0, Box::new(LambertianDiffuse::new(Vec3::new(1.0, 0.0, 0.0))))),
+            Box::new(Sphere::new(Vec3::new( 2.0, 1.0, -1.0), 1.0, Box::new(Metal::new(Vec3::new(1.0, 1.0, 1.0))))),
+            Box::new(Sphere::new(Vec3::new(-2.0, 1.0, -1.0), 1.0, Box::new(Metal::new(Vec3::new(1.0, 1.0, 1.0))))),
         ]
     );
 
