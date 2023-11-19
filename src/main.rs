@@ -1,6 +1,7 @@
 mod camera;
 mod ray;
 mod interval;
+mod ray_hit;
 mod primitive;
 mod material;
 mod scene;
@@ -16,7 +17,7 @@ use primitive::{
     Hittable,
     sphere::Sphere,
 };
-use material::{LambertianDiffuse, Metal};
+use material::{diffuse::LambertianDiffuse, metal::Metal};
 use scene::{SkyAttenuation, Scene};
 use timer::Timer;
 
@@ -125,7 +126,7 @@ fn main() {
     println!("Raytracing in one Weekend!");
 
     let render_resolution = Resolution::new(1280, 720);
-    let mut renderer = Renderer::new(&render_resolution, 128, 50);
+    let mut renderer = Renderer::new(&render_resolution, 100, 50);
     let camera = Camera::new(
         Vec3::new(0.0, 1.0, 4.0),
         2.0,

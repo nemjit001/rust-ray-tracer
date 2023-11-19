@@ -1,8 +1,9 @@
 use nalgebra_glm::Vec3;
 
-use super::interval::Interval;
-use super::ray::Ray;
-use super::primitive::{HittablePrimitive, Hittable, RayHit};
+use crate::interval::Interval;
+use crate::ray::Ray;
+use crate::ray_hit::RayHit;
+use crate::primitive::{HittablePrimitive, Hittable};
 
 pub struct SkyAttenuation {
     pub light_color: Vec3,
