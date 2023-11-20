@@ -4,9 +4,15 @@ use crate::ray::Ray;
 use crate::primitive::Primitive;
 use crate::material::Material;
 
+pub enum HitType {
+    FrontFace,
+    BackFace,
+}
+
 pub struct RayHit<'primitive_lifetime> {
     pub depth: f32,
     pub position: Vec3,
+    pub hit_type: HitType,
     pub normal: Vec3,
     pub material: &'primitive_lifetime Box<dyn Material>,
 }
@@ -17,15 +23,18 @@ impl<'a> RayHit<'a> {
         P: Primitive
     {
         let mut normal = primitive.normal(&position);
+        let mut hit_type = HitType::FrontFace;
 
         // Dot product N * D is positive if vectors are aligned (i.e. the ray comes from inside the object!)
         if normal.dot(ray.direction()) > 0.0 {
             normal = primitive.inverted_normal(&position);
+            hit_type = HitType::BackFace;
         }
 
         RayHit {
             depth,
             position,
+            hit_type,
             normal,
             material: primitive.material(),
         }

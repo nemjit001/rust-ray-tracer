@@ -17,7 +17,7 @@ use primitive::{
     Hittable,
     sphere::Sphere,
 };
-use material::{diffuse::LambertianDiffuse, metal::Metal};
+use material::{diffuse::LambertianDiffuse, metal::Metal, dielectric::Dielectric};
 use scene::{SkyAttenuation, Scene};
 use timer::Timer;
 
@@ -125,7 +125,7 @@ impl Renderer {
 fn main() {
     println!("Raytracing in one Weekend!");
 
-    let render_resolution = Resolution::new(1280, 720);
+    let render_resolution = Resolution::new(1920, 1080);
     let mut renderer = Renderer::new(&render_resolution, 100, 50);
     let camera = Camera::new(
         Vec3::new(0.0, 1.0, 4.0),
@@ -141,11 +141,42 @@ fn main() {
             sky_color: Vec3::new(0.2, 0.7, 1.0),
         },
         vec![
-            Box::new(Sphere::new(Vec3::new(0.0, -100.0, 0.0), 100.0, Box::new(LambertianDiffuse::new(Vec3::new(0.2, 0.2, 0.3))))),  // Ground
+            Box::new(Sphere::new(
+                Vec3::new(0.0, -100.0, 0.0),
+                100.0,
+                Box::new(LambertianDiffuse::new(Vec3::new(0.2, 0.2, 0.3)))
+            )),  // Ground
             // Primitives below
-            Box::new(Sphere::new(Vec3::new( 0.0, 1.0, -1.0), 1.0, Box::new(LambertianDiffuse::new(Vec3::new(1.0, 0.0, 0.0))))),
-            Box::new(Sphere::new(Vec3::new( 2.0, 1.0, -1.0), 0.75, Box::new(Metal::new(Vec3::new(0.7, 0.5, 1.0), 0.75)))),
-            Box::new(Sphere::new(Vec3::new(-2.0, 1.0, -1.0), 0.75, Box::new(Metal::new(Vec3::new(0.8, 1.0, 0.2), 0.01)))),
+            Box::new(Sphere::new(
+                Vec3::new( 0.0, 1.0, -1.0),
+                1.0,
+                Box::new(LambertianDiffuse::new(Vec3::new(1.0, 0.0, 0.0)))
+            )),
+            Box::new(Sphere::new(
+                Vec3::new( 2.0, 1.0, -1.0),
+                0.75,
+                Box::new(Metal::new(Vec3::new(0.7, 0.5, 1.0), 0.75))
+            )),
+            Box::new(Sphere::new(
+                Vec3::new(-2.0, 1.0, -1.0),
+                0.75,
+                Box::new(Metal::new(Vec3::new(0.8, 1.0, 0.2), 0.01))
+            )),
+            Box::new(Sphere::new(
+                Vec3::new(-1.0, 0.5, 0.5),
+                0.5,
+                Box::new(Dielectric::new(Vec3::new(0.2, 0.5, 0.8), 1.52))
+            )),
+            Box::new(Sphere::new(
+                Vec3::new(-1.0, 0.5, 0.5),
+                -0.4,
+                Box::new(Dielectric::new(Vec3::new(0.2, 0.5, 0.8), 1.52))
+            )), // Inverted sphere to model hollow inside
+            Box::new(Sphere::new(
+                Vec3::new(1.0, 0.25, 0.0),
+                0.25,
+                Box::new(Dielectric::new(Vec3::new(1.0, 0.5, 0.8), 1.77))
+            )),
         ]
     );
 
