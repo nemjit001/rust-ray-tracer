@@ -10,5 +10,5 @@ pub trait Light {
         1.0 / distance_squared
     }
 
-    fn color(&self, incident_angle: f32, distance_squared: f32) -> Vec3;
+    fn color(&self, light_direction: &Vec3, normal: &Vec3, distance_squared: f32) -> Vec3;
 }

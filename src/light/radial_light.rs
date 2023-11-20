@@ -45,7 +45,8 @@ impl Light for RadialLight {
         self.position + self.sample_light_sphere()
     }
 
-    fn color(&self, incident_angle: f32, distance_squared: f32) -> Vec3 {
-        incident_angle * self.base_intensity * self.color * self.falloff_intensity(distance_squared)
+    fn color(&self, light_direction: &Vec3, normal: &Vec3, distance_squared: f32) -> Vec3 {
+        let phong = light_direction.dot(normal);
+        phong * self.base_intensity * self.color * self.falloff_intensity(distance_squared)
     }
 }

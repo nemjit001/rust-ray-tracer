@@ -32,7 +32,7 @@ fn main() {
     let mut renderer = Renderer::new(
         &render_resolution,
         &RendererConfig {
-            sample_count: 100,
+            sample_count: 1,
             max_bounces: 25
         }
     );
