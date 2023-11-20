@@ -1,6 +1,13 @@
+mod gl_layer;
+
 use std::path::Path;
 use nalgebra_glm::Vec3;
 use image::{RgbImage, ImageBuffer, Rgb};
+
+use gl_layer::{
+    vertex_array::VertexArray,
+    shaders::{ShaderType, Shader, ShaderPipeline}
+};
 
 use crate::resolution::Resolution;
 use crate::ray::Ray;
@@ -16,19 +23,82 @@ pub struct RendererConfig {
     pub max_bounces: u32,
 }
 
+struct RasterPass {
+    vertex_array_object: VertexArray,
+    pipeline: ShaderPipeline,
+}
+
+impl RasterPass {
+    pub fn new() -> Self {
+        let vertex_shader = Shader::new(
+            ShaderType::Vertex,
+            r#"
+            #version 450
+
+            out vec2 screen_uv;
+
+            void main() {
+                screen_uv = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+                gl_Position = vec4(screen_uv * 2.0f + -1.0f, 0.0f, 1.0f);
+            }
+            "#
+        );
+
+        let fragment_shader = Shader::new(
+            ShaderType::Fragment,
+            r#"
+            #version 450
+
+            in vec2 screen_uv;
+            out vec4 frag_color;
+
+            void main() {
+                frag_color = vec4(screen_uv, 0, 1);
+            }
+            "#
+        );
+
+        let vertex_array_object = VertexArray::new();
+        let pipeline = ShaderPipeline::new(&[vertex_shader, fragment_shader]);
+
+        RasterPass {
+            vertex_array_object,
+            pipeline
+        }
+    }
+
+    pub fn execute(&self) {
+        unsafe {
+            gl::Clear(gl::COLOR);
+        }
+
+        // TODO: bind texture for use
+        self.vertex_array_object.bind();
+        self.pipeline.bind();
+
+        unsafe {
+            gl::DrawArrays(gl::TRIANGLES, 0, 3);
+        }
+    }
+}
+
 pub struct Renderer {
-    render_target: RgbImage,
     config: RendererConfig,
+    render_target: RgbImage,
+    raster_pass: RasterPass,
 }
 
 impl Renderer {
     pub fn new(window: &mut glfw::Window, config: &RendererConfig) -> Self {
-        gl::load_with(|name| window.get_proc_address(name));
+        gl_layer::init(window);
 
         let render_target: RgbImage = ImageBuffer::new(config.resolution.width(), config.resolution.height());
+        let raster_pass = RasterPass::new();
+
         Renderer {
-            render_target,
             config: *config,
+            render_target,
+            raster_pass,
         }
     }
 
@@ -53,7 +123,7 @@ impl Renderer {
             }
         }
 
-        // TODO: present using openGL w/ fs quad
+        self.raster_pass.execute();
     }
 
     pub fn save_render(&self, path: &Path) {

@@ -139,7 +139,6 @@ fn main() {
         println!("Frame time: {:?} ({} FPS)", timer.delta_time(), 1.0 / timer.delta_time_f32());
 
         renderer.render(&camera, &scene);
-
         window.swap_buffers();
         glfw_ctx.poll_events();
 
