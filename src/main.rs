@@ -144,8 +144,8 @@ fn main() {
             Box::new(Sphere::new(Vec3::new(0.0, -100.0, 0.0), 100.0, Box::new(LambertianDiffuse::new(Vec3::new(0.2, 0.2, 0.3))))),  // Ground
             // Primitives below
             Box::new(Sphere::new(Vec3::new( 0.0, 1.0, -1.0), 1.0, Box::new(LambertianDiffuse::new(Vec3::new(1.0, 0.0, 0.0))))),
-            Box::new(Sphere::new(Vec3::new( 2.0, 1.0, -1.0), 0.75, Box::new(Metal::new(Vec3::new(0.7, 0.5, 1.0))))),
-            Box::new(Sphere::new(Vec3::new(-2.0, 1.0, -1.0), 0.75, Box::new(Metal::new(Vec3::new(0.8, 1.0, 0.2))))),
+            Box::new(Sphere::new(Vec3::new( 2.0, 1.0, -1.0), 0.75, Box::new(Metal::new(Vec3::new(0.7, 0.5, 1.0), 0.75)))),
+            Box::new(Sphere::new(Vec3::new(-2.0, 1.0, -1.0), 0.75, Box::new(Metal::new(Vec3::new(0.8, 1.0, 0.2), 0.01)))),
         ]
     );
 
