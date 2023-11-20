@@ -185,10 +185,6 @@ impl Camera {
         }
     }
 
-    pub fn position(&self) -> Vec3 {
-        self.position
-    }
-
     pub fn scene_depth_interval(&self) -> &Interval {
         &self.scene_depth
     }
