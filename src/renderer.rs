@@ -79,7 +79,10 @@ impl Renderer {
 
                 match scatter {
                     Some(scatter) => {
-                        return scatter.attenuation.component_mul(&self.bounce_ray(&scatter.ray, scene, z_interval, depth - 1));
+                        let object_color = scatter.attenuation.component_mul(&self.bounce_ray(&scatter.ray, scene, z_interval, depth - 1));
+                        let light_color = scene.shadow_ray(&hit, z_interval);
+
+                        return object_color.component_mul(&light_color)
                     },
                     None => return Vec3::zeros(),
                 }

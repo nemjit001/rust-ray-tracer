@@ -4,6 +4,7 @@ mod interval;
 mod ray_hit;
 mod primitive;
 mod material;
+mod light;
 mod scene;
 mod renderer;
 mod timer;
@@ -17,6 +18,7 @@ use primitive::{
     sphere::Sphere,
     plane::Plane,
 };
+use light::radial_light::RadialLight;
 use material::{diffuse::LambertianDiffuse, metal::Metal, dielectric::Dielectric};
 use scene::{SkyAttenuation, Scene};
 use renderer::{Renderer, RendererConfig};
@@ -56,7 +58,7 @@ fn main() {
             Box::new(Plane::new(
                 Vec3::new(0.0, 0.0, 0.0),
                 Vec3::new(0.0, 1.0, 0.0),
-                Box::new(Metal::new(Vec3::new(0.5, 0.5, 0.5), 0.2))
+                Box::new(LambertianDiffuse::new(Vec3::new(0.5, 0.5, 0.5)))
             )),
             Box::new(Sphere::new(
                 Vec3::new( 0.0, 1.0, -1.0),
@@ -93,6 +95,26 @@ fn main() {
                 0.25,
                 Box::new(Dielectric::new(Vec3::new(0.2, 1.0, 1.0), 2.17))
             )),
+        ],
+        vec![
+            Box::new(RadialLight::new(
+                Vec3::new(0.0, 5.0, 4.0),
+                Vec3::new(1.0, 1.0, 1.0),
+                2.0,
+                50.0,
+            )),
+            Box::new(RadialLight::new(
+                Vec3::new(-4.0, 6.0, -3.0),
+                Vec3::new(0.0, 0.3, 0.8),
+                1.0,
+                50.0,
+            )),
+            Box::new(RadialLight::new(
+                Vec3::new(5.0, 8.0, -3.0),
+                Vec3::new(1.0, 0.7, 0.2),
+                0.5,
+                50.0,
+            ))
         ]
     );
 

@@ -4,6 +4,7 @@ use crate::ray::Ray;
 use crate::primitive::Primitive;
 use crate::material::Material;
 
+#[derive(Debug)]
 pub enum HitType {
     FrontFace,
     BackFace,
@@ -38,5 +39,17 @@ impl<'a> RayHit<'a> {
             normal,
             material: primitive.material(),
         }
+    }
+}
+
+impl<'a> std::fmt::Debug for RayHit<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RayHit")
+            .field("depth", &self.depth)
+            .field("position", &self.position)
+            .field("hit_type", &self.hit_type)
+            .field("normal", &self.normal)
+            .field("material", &"Dyn Material")
+            .finish()
     }
 }

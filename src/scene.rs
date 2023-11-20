@@ -4,24 +4,25 @@ use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::ray_hit::RayHit;
 use crate::primitive::{HittablePrimitive, Hittable};
+use crate::light::Light;
 
 pub struct SkyAttenuation {
     pub light_color: Vec3,
     pub sky_color: Vec3,
 }
 
-pub struct Scene
-{
+pub struct Scene {
     sky_attenuation: SkyAttenuation,
     primitives: Vec<Box<dyn HittablePrimitive>>,
+    lights: Vec<Box<dyn Light>>,
 }
 
-impl Scene
-{
-    pub fn new(sky_attenuation: SkyAttenuation, primitives: Vec<Box<dyn HittablePrimitive>>) -> Self {
+impl Scene {
+    pub fn new(sky_attenuation: SkyAttenuation, primitives: Vec<Box<dyn HittablePrimitive>>, lights: Vec<Box<dyn Light>>) -> Self {
         Scene {
             sky_attenuation,
             primitives,
+            lights,
         }
     }
 
@@ -30,10 +31,31 @@ impl Scene
 
         (1.0 - a) * self.sky_attenuation.light_color + a * self.sky_attenuation.sky_color
     }
+
+    pub fn shadow_ray(&self, hit: &RayHit, interval: &Interval) -> Vec3 {
+        let mut combined_light = Vec3::zeros();
+
+        for light in &self.lights {
+            let pl = light.position() - hit.position;
+            let shadow_ray_direction = pl.normalize();
+            let shadow_ray = Ray::new(hit.position, shadow_ray_direction);
+
+            let shadow_hit = self.hit(&shadow_ray, interval);
+
+            match shadow_hit {
+                Some(_hit) => { /* TODO: implement light absorption of partially transparent materials */ },
+                None => {
+                    let angle = shadow_ray_direction.dot(&hit.normal);
+                    combined_light += light.color(angle, pl.magnitude_squared());
+                }
+            }
+        }
+
+        combined_light
+    }
 }
 
-impl Hittable for Scene
-{
+impl Hittable for Scene {
     fn hit(&self, ray: &Ray, interval: &Interval) -> Option<RayHit> {
         let mut closest_hit: Option<RayHit> = None;
 
