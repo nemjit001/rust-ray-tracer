@@ -54,7 +54,7 @@ struct ViewPlane {
 impl ViewPlane {
     pub fn new(position: &Vec3, focal_length: f32, camera_vectors: &CameraVectors, viewport_width: f32, viewport_height: f32, resolution: &Resolution) -> Self {
         let vec_u = viewport_width * camera_vectors.up();
-        let vec_v = viewport_height * -camera_vectors.right();
+        let vec_v = -1.0 * viewport_height * camera_vectors.right();
 
         let pixel_delta_u = vec_u / resolution.width() as f32;
         let pixel_delta_v = vec_v / resolution.height() as f32;
@@ -78,6 +78,50 @@ impl ViewPlane {
     }
 }
 
+struct DefocusDisk {
+    angle: f32,
+    radius: f32,
+}
+
+impl DefocusDisk {
+    pub fn new(angle: f32, focal_length: f32) -> Self {
+        let radius = focal_length * f32::tan(f32::to_radians(angle / 2.0));
+
+        DefocusDisk {
+            angle,
+            radius,
+        }
+    }
+
+    pub fn angle(&self) -> f32 {
+        self.angle
+    }
+
+    pub fn sample(&self, camera_vectors: &CameraVectors) -> Vec3 {
+        let disk_u = self.radius * camera_vectors.right();
+        let disk_v = -1.0 * self.radius * camera_vectors.up();
+
+        let random_sample = self.random_in_unit_disk();
+        (random_sample.x * disk_u) + (random_sample.y * disk_v)
+    }
+
+    fn random_in_unit_disk(&self) -> Vec3 {
+        let mut rng = thread_rng();
+
+        loop {
+            let vec = Vec3::new(
+                rng.gen_range(-1.0..1.0),
+                rng.gen_range(-1.0..1.0),
+                0.0
+            );
+
+            if vec.magnitude_squared() < 1.0 {
+                return vec
+            }
+        }
+    }
+}
+
 struct CameraVectors {
     forward: Vec3,
     up: Vec3,
@@ -97,17 +141,27 @@ impl CameraVectors {
     }
 }
 
+pub enum FocusMode {
+    AutoFocus,
+    Manual(f32),
+}
+
 pub struct Camera {
     position: Vec3,
     scene_depth: Interval,
     resolution: Resolution,
     view_plane: ViewPlane,
-    _camera_vectors: CameraVectors,
+    defocus_disk: DefocusDisk,
+    camera_vectors: CameraVectors,
 }
 
 impl Camera {
-    pub fn new(position: Vec3, look_at: Vec3, vertical_fov: f32, scene_depth: Interval, resolution: &Resolution) -> Self {
-        let focal_length = (look_at - position).magnitude();
+    pub fn new(position: Vec3, look_at: Vec3, vertical_fov: f32, focus_mode: FocusMode, defocus_angle: f32, scene_depth: Interval, resolution: &Resolution) -> Self {
+        let focal_length = match focus_mode {
+            FocusMode::AutoFocus => (look_at - position).magnitude(),
+            FocusMode::Manual(length) => length,
+        };
+
         let (viewport_width, viewport_height) = Self::calculate_viewport_extent(vertical_fov, focal_length, resolution);
 
         let forward = (position - look_at).normalize();
@@ -118,6 +172,7 @@ impl Camera {
         };
         
         let view_plane = ViewPlane::new(&position, focal_length, &camera_vectors, viewport_width, viewport_height, resolution);
+        let defocus_disk = DefocusDisk::new(defocus_angle, focal_length);
         let resolution = *resolution;
 
         Camera {
@@ -125,7 +180,8 @@ impl Camera {
             scene_depth,
             resolution,
             view_plane,
-            _camera_vectors: camera_vectors,
+            defocus_disk,
+            camera_vectors,
         }
     }
 
@@ -154,6 +210,15 @@ impl Camera {
 
         let sample_offset = self.view_plane.get_pixel_offset(x_offset, y_offset);
         pixel_center + sample_offset
+    }
+
+    pub fn get_ray_origin(&self) -> Vec3 {
+        if self.defocus_disk.angle() <= 0.0 {
+            self.position
+        }
+        else {
+            self.position + self.defocus_disk.sample(&self.camera_vectors)
+        }
     }
 
     fn calculate_viewport_extent(vertical_fov: f32, focal_length: f32, resolution: &Resolution) -> (f32, f32) {
