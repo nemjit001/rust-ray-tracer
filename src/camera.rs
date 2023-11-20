@@ -58,9 +58,6 @@ impl ViewPlane {
 
         let pixel_delta_u = vec_u / resolution.width() as f32;
         let pixel_delta_v = vec_v / resolution.height() as f32;
-
-        // XXX: using z forward coordinates, meaning forward * focal length is the rotation of the camera.
-        //      rotating the forward vector & calculating new plane position will give camera rot.
         let viewport_top_left = position - (focal_length * camera_vectors.forward()) - (vec_u / 2.0) - (vec_v / 2.0);
 
         ViewPlane {
