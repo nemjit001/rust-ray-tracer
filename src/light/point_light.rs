@@ -2,6 +2,7 @@ use nalgebra_glm::Vec3;
 
 use super::Light;
 
+#[deprecated]
 pub struct PointLight {
     position: Vec3,
     color: Vec3,
