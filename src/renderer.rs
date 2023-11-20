@@ -2,14 +2,16 @@ use std::path::Path;
 use nalgebra_glm::Vec3;
 use image::{RgbImage, ImageBuffer, Rgb};
 
+use crate::resolution::Resolution;
 use crate::ray::Ray;
 use crate::interval::Interval;
-use crate::camera::{Resolution, Camera};
+use crate::camera::Camera;
 use crate::primitive::Hittable;
 use crate::scene::Scene;
 
 #[derive(Clone, Copy)]
 pub struct RendererConfig {
+    pub resolution: Resolution,
     pub sample_count: u32,
     pub max_bounces: u32,
 }
@@ -20,9 +22,10 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(resolution: &Resolution, config: &RendererConfig) -> Self {
-        let render_target: RgbImage = ImageBuffer::new(resolution.width(), resolution.height());
+    pub fn new(window: &mut glfw::Window, config: &RendererConfig) -> Self {
+        gl::load_with(|name| window.get_proc_address(name));
 
+        let render_target: RgbImage = ImageBuffer::new(config.resolution.width(), config.resolution.height());
         Renderer {
             render_target,
             config: *config,
@@ -30,11 +33,10 @@ impl Renderer {
     }
 
     pub fn render(&mut self, camera: &Camera, scene: &Scene) {
-        let render_resolution = camera.resolution();
         let z_interval = camera.scene_depth_interval();
 
-        for y in 0..render_resolution.height() {
-            for x in 0..render_resolution.width() {
+        for y in 0..self.config.resolution.height() {
+            for x in 0..self.config.resolution.width() {
                 let mut sample_sum_color = Vec3::zeros();
 
                 for sample in 0..self.config.sample_count {
@@ -50,6 +52,8 @@ impl Renderer {
                 self.render_target.put_pixel(x, y, color);
             }
         }
+
+        // TODO: present using openGL w/ fs quad
     }
 
     pub fn save_render(&self, path: &Path) {

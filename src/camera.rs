@@ -1,32 +1,12 @@
 use nalgebra_glm::Vec3;
 use rand::{thread_rng, Rng};
 
-use super::interval::Interval;
+use crate::resolution::Resolution;
+use crate::interval::Interval;
 
 // const WORLD_FORWARD: Vec3   = Vec3::new(0.0, 0.0, 1.0);
 // const WORLD_RIGHT: Vec3     = Vec3::new(1.0, 0.0, 0.0);
 const WORLD_UP: Vec3        = Vec3::new(0.0, 1.0, 0.0);
-
-#[derive(Debug, Clone, Copy)]
-pub struct Resolution(u32, u32);
-
-impl Resolution {
-    pub fn new(width: u32, height: u32) -> Self {
-        Resolution(width, height)
-    }
-    
-    pub fn width(&self) -> u32 {
-        self.0
-    }
-
-    pub fn height(&self) -> u32 {
-        self.1
-    }
-
-    pub fn aspect_ratio(&self) -> f32 {
-        self.width() as f32 / self.height() as f32
-    }
-}
 
 #[derive(Debug)]
 struct PixelDelta(Vec3, Vec3);
@@ -146,7 +126,6 @@ pub enum FocusMode {
 pub struct Camera {
     position: Vec3,
     scene_depth: Interval,
-    resolution: Resolution,
     view_plane: ViewPlane,
     defocus_disk: DefocusDisk,
     camera_vectors: CameraVectors,
@@ -170,12 +149,10 @@ impl Camera {
         
         let view_plane = ViewPlane::new(&position, focal_length, &camera_vectors, viewport_width, viewport_height, resolution);
         let defocus_disk = DefocusDisk::new(defocus_angle, focal_length);
-        let resolution = *resolution;
 
         Camera {
             position,
             scene_depth,
-            resolution,
             view_plane,
             defocus_disk,
             camera_vectors,
@@ -184,10 +161,6 @@ impl Camera {
 
     pub fn scene_depth_interval(&self) -> &Interval {
         &self.scene_depth
-    }
-
-    pub fn resolution(&self) -> Resolution {
-        self.resolution
     }
 
     pub fn get_pixel_center(&self, x: u32, y: u32) -> Vec3 {
