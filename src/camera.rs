@@ -3,6 +3,10 @@ use rand::{thread_rng, Rng};
 
 use super::interval::Interval;
 
+// const WORLD_FORWARD: Vec3   = Vec3::new(0.0, 0.0, 1.0);
+// const WORLD_RIGHT: Vec3     = Vec3::new(1.0, 0.0, 0.0);
+const WORLD_UP: Vec3        = Vec3::new(0.0, 1.0, 0.0);
+
 #[derive(Debug, Clone, Copy)]
 pub struct Resolution(u32, u32);
 
@@ -48,16 +52,16 @@ struct ViewPlane {
 }
 
 impl ViewPlane {
-    pub fn new(position: &Vec3, focal_length: f32, viewport_width: f32, viewport_height: f32, resolution: &Resolution) -> Self {
-        let vec_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let vec_v = Vec3::new(0.0, -viewport_height, 0.0);
+    pub fn new(position: &Vec3, focal_length: f32, camera_vectors: &CameraVectors, viewport_width: f32, viewport_height: f32, resolution: &Resolution) -> Self {
+        let vec_u = viewport_width * camera_vectors.up();
+        let vec_v = viewport_height * -camera_vectors.right();
 
         let pixel_delta_u = vec_u / resolution.width() as f32;
         let pixel_delta_v = vec_v / resolution.height() as f32;
 
         // XXX: using z forward coordinates, meaning forward * focal length is the rotation of the camera.
         //      rotating the forward vector & calculating new plane position will give camera rot.
-        let viewport_top_left = position - Vec3::new(0.0, 0.0, focal_length) - (vec_u / 2.0) - (vec_v / 2.0);
+        let viewport_top_left = position - (focal_length * camera_vectors.forward()) - (vec_u / 2.0) - (vec_v / 2.0);
 
         ViewPlane {
             viewport_top_left,
@@ -74,27 +78,54 @@ impl ViewPlane {
     }
 }
 
+struct CameraVectors {
+    forward: Vec3,
+    up: Vec3,
+}
+
+impl CameraVectors {
+    pub fn forward(&self) -> Vec3 {
+        self.forward
+    }
+
+    pub fn up(&self) -> Vec3 {
+        self.up
+    }
+
+    pub fn right(&self) -> Vec3 {
+        self.forward.cross(&self.up)
+    }
+}
+
 pub struct Camera {
     position: Vec3,
-    focal_length: f32,
     scene_depth: Interval,
     resolution: Resolution,
     view_plane: ViewPlane,
+    _camera_vectors: CameraVectors,
 }
 
 impl Camera {
-    pub fn new(position: Vec3, focal_length: f32, scene_depth: Interval, resolution: &Resolution) -> Self {
-        let (viewport_width, viewport_height) = Self::calculate_viewport_extent(resolution);
+    pub fn new(position: Vec3, look_at: Vec3, vertical_fov: f32, scene_depth: Interval, resolution: &Resolution) -> Self {
+        let focal_length = (look_at - position).magnitude();
+        let (viewport_width, viewport_height) = Self::calculate_viewport_extent(vertical_fov, focal_length, resolution);
+
+        let forward = (position - look_at).normalize();
+        let up = WORLD_UP.cross(&forward);
+        let camera_vectors = CameraVectors {
+            forward,
+            up,
+        };
         
-        let view_plane = ViewPlane::new(&position, focal_length, viewport_width, viewport_height, resolution);
+        let view_plane = ViewPlane::new(&position, focal_length, &camera_vectors, viewport_width, viewport_height, resolution);
         let resolution = *resolution;
 
         Camera {
             position,
-            focal_length,
             scene_depth,
             resolution,
             view_plane,
+            _camera_vectors: camera_vectors,
         }
     }
 
@@ -125,8 +156,11 @@ impl Camera {
         pixel_center + sample_offset
     }
 
-    fn calculate_viewport_extent(resolution: &Resolution) -> (f32, f32) {
-        let viewport_height = 2.0f32;
+    fn calculate_viewport_extent(vertical_fov: f32, focal_length: f32, resolution: &Resolution) -> (f32, f32) {
+        let fov_radians = f32::to_radians(vertical_fov);
+        let height = f32::tan(fov_radians / 2.0);
+
+        let viewport_height = 2.0 * height * focal_length;
         let viewport_width = viewport_height * resolution.aspect_ratio();
 
         (viewport_width, viewport_height)

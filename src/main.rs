@@ -46,21 +46,22 @@ impl Renderer {
             for x in 0..render_resolution.width() {
                 let pixel_center = camera.get_pixel_center(x, y);
 
-                let mut color_samples = vec![];
-                color_samples.reserve(self.sample_count as usize);
-
+                let mut sample_sum_color = Vec3::zeros();
                 for sample_num in 0..self.sample_count {
                     let pixel_sample = camera.sample_pixel(pixel_center, sample_num);
 
                     let ray_direction = pixel_sample - camera.position();
                     let ray_direction = ray_direction.normalize();
+
                     let ray = Ray::new(camera.position(), ray_direction);
                     let color = self.bounce_ray(&ray, scene, z_interval, self.max_bounces);
 
-                    color_samples.push(color);
+                    sample_sum_color += color;
                 }
     
-                let color = Self::samples_to_color(&color_samples);
+                let color = sample_sum_color / self.sample_count as f32;
+                let color = Self::rgb_to_gamma(color);
+                let color = Self::vec3_to_color(&color);
                 self.render_target.put_pixel(x, y, color);
             }
         }
@@ -108,28 +109,17 @@ impl Renderer {
             (intensity.clamp(color.z) * 256.0) as u8,
         ])
     }
-
-    fn samples_to_color(samples: &[Vec3]) -> Rgb<u8> {
-        let mut sum = Vec3::zeros();
-    
-        for sample in samples {
-            sum += sample;
-        }
-    
-        let out_color = sum / samples.len() as f32;
-        let out_color = Self::rgb_to_gamma(out_color);
-        Self::vec3_to_color(&out_color)
-    }
 }
 
 fn main() {
     println!("Raytracing in one Weekend!");
 
-    let render_resolution = Resolution::new(1920, 1080);
+    let render_resolution = Resolution::new(2160, 1440);
     let mut renderer = Renderer::new(&render_resolution, 100, 50);
     let camera = Camera::new(
-        Vec3::new(0.0, 1.0, 4.0),
-        2.0,
+        Vec3::new(0.0, 2.0, 6.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        60.0,
         Interval::new(0.001, 100.0),
         &render_resolution
     );
@@ -176,6 +166,11 @@ fn main() {
                 Vec3::new(1.0, 0.25, 0.0),
                 0.25,
                 Box::new(Dielectric::new(Vec3::new(1.0, 0.5, 0.8), 1.77))
+            )),
+            Box::new(Sphere::new(
+                Vec3::new(0.0, 0.25, 1.0),
+                0.25,
+                Box::new(Dielectric::new(Vec3::new(0.2, 1.0, 1.0), 2.17))
             )),
         ]
     );
