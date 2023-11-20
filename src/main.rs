@@ -16,6 +16,7 @@ use camera::{Resolution, Camera};
 use primitive::{
     Hittable,
     sphere::Sphere,
+    plane::Plane,
 };
 use material::{diffuse::LambertianDiffuse, metal::Metal, dielectric::Dielectric};
 use scene::{SkyAttenuation, Scene};
@@ -114,8 +115,7 @@ impl Renderer {
 fn main() {
     println!("Raytracing in one Weekend!");
 
-    let render_resolution = Resolution::new(2160, 1440);
-    let mut renderer = Renderer::new(&render_resolution, 100, 50);
+    let render_resolution = Resolution::new(1280, 720);
     let camera = Camera::new(
         Vec3::new(0.0, 2.0, 6.0),
         Vec3::new(0.0, 1.0, 0.0),
@@ -123,6 +123,8 @@ fn main() {
         Interval::new(0.001, 100.0),
         &render_resolution
     );
+
+    let mut renderer = Renderer::new(&render_resolution, 100, 50);
     let mut timer = Timer::new();
 
     let scene = Scene::new(
@@ -131,9 +133,9 @@ fn main() {
             sky_color: Vec3::new(0.2, 0.7, 1.0),
         },
         vec![
-            Box::new(Sphere::new(
-                Vec3::new(0.0, -100.0, 0.0),
-                100.0,
+            Box::new(Plane::new(
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(0.0, 1.0, 0.0),
                 Box::new(LambertianDiffuse::new(Vec3::new(0.2, 0.2, 0.3)))
             )),  // Ground
             // Primitives below

@@ -1,4 +1,5 @@
 pub mod sphere;
+pub mod plane;
 
 use nalgebra_glm::Vec3;
 

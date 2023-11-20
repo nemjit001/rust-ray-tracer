@@ -1,6 +1,7 @@
 use nalgebra_glm::Vec3;
 
-use super::{Primitive, Hittable, HittablePrimitive, RayHit};
+use super::{Primitive, Hittable, HittablePrimitive};
+use crate::ray_hit::RayHit;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::material::Material;
