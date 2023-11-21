@@ -15,7 +15,7 @@ pub struct RayHit<'primitive_lifetime> {
     pub position: Vec3,
     pub hit_type: HitType,
     pub normal: Vec3,
-    pub material: &'primitive_lifetime Box<dyn Material>,
+    pub material: &'primitive_lifetime dyn Material,
 }
 
 impl<'a> RayHit<'a> {

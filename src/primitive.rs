@@ -13,7 +13,7 @@ pub trait Primitive {
 
     fn inverted_normal(&self, location: &Vec3) -> Vec3;
 
-    fn material(&self) -> &Box<dyn Material>;
+    fn material(&self) -> &dyn Material;
 }
 
 pub trait Hittable {

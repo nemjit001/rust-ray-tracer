@@ -54,7 +54,7 @@ impl Scene {
                 }
             }
 
-            if let None = occlusion_hit {
+            if occlusion_hit.is_none() {
                 combined_light += light.color(shadow_ray.direction(), &hit.normal, pl.magnitude_squared());
             }
         }

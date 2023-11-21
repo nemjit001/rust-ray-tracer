@@ -52,7 +52,7 @@ impl RayTracingPass {
 
                 for sample in 0..self.sample_count {
                     let ray = self.get_ray(camera, x, y, sample);
-                    let color = self.bounce_ray(&ray, scene, z_interval, self.max_bounces);
+                    let color = Self::bounce_ray(&ray, scene, z_interval, self.max_bounces);
 
                     sample_sum_color += color;
                 }
@@ -76,7 +76,7 @@ impl RayTracingPass {
         Ray::new(ray_origin, ray_direction)
     }
 
-    fn bounce_ray(&self, ray: &Ray, scene: &Scene, z_interval: &Interval, depth: u32) -> Vec3 {
+    fn bounce_ray(ray: &Ray, scene: &Scene, z_interval: &Interval, depth: u32) -> Vec3 {
         if depth == 0 {
             return Vec3::zeros();
         }
@@ -89,19 +89,19 @@ impl RayTracingPass {
                 match scatter {
                     Some(scatter) => {
                         let object_color = scatter.attenuation.component_mul(
-                            &self.bounce_ray(&scatter.ray, scene, z_interval, depth - 1)
+                            &Self::bounce_ray(&scatter.ray, scene, z_interval, depth - 1)
                         );
 
                         match hit.material.material_transparency() {
-                            MaterialTransparency::Opaque => return object_color.component_mul(&scene.shadow_ray(&hit, z_interval)),
-                            MaterialTransparency::Transparent => return object_color,
+                            MaterialTransparency::Opaque => object_color.component_mul(&scene.shadow_ray(&hit, z_interval)),
+                            MaterialTransparency::Transparent => object_color,
                         }
                     },
-                    None => return Vec3::zeros(),
+                    None => Vec3::zeros(),
                 }
             }
             None => {
-                return scene.get_sky_color(&ray);
+                scene.get_sky_color(ray)
             }
         }
     }
@@ -182,7 +182,7 @@ impl RasterPass {
         }
 
         let (width, height) = render_image.dimensions();
-        self.render_result.upload_buffer(width, height, &render_image.as_bytes());
+        self.render_result.upload_buffer(width, height, render_image.as_bytes());
 
         self.vertex_array_object.bind();
         self.render_result.bind();

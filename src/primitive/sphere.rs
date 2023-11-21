@@ -33,8 +33,8 @@ impl Primitive for Sphere {
         -self.normal(location)
     }
 
-    fn material(&self) -> &Box<dyn Material> {
-        &self.material
+    fn material(&self) -> &dyn Material {
+        self.material.as_ref()
     }
 }
 
