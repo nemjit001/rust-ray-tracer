@@ -58,3 +58,42 @@ impl Hittable for Plane {
 impl HittablePrimitive for Plane {
     //
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::material::diffuse::LambertianDiffuse;
+
+    #[test]
+    fn test_intersect() {
+        let plane = Plane::new(
+            Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0),
+            Box::new(LambertianDiffuse::new(Vec3::new(0.0, 0.0, 0.0)))
+        );
+
+        let ray = Ray::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, -1.0, 0.0));
+        assert!(plane.hit(&ray, &Interval::new(0.01, f32::MAX)).is_some())
+    }
+
+    #[test]
+    fn test_intersect_below() {
+        let plane = Plane::new(
+            Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0),
+            Box::new(LambertianDiffuse::new(Vec3::new(0.0, 0.0, 0.0)))
+        );
+
+        let ray = Ray::new(Vec3::new(0.0, -1.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
+        assert!(plane.hit(&ray, &Interval::new(0.01, f32::MAX)).is_some())
+    }
+
+    #[test]
+    fn test_miss() {
+        let plane = Plane::new(
+            Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0),
+            Box::new(LambertianDiffuse::new(Vec3::new(0.0, 0.0, 0.0)))
+        );
+
+        let ray = Ray::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0));
+        assert!(plane.hit(&ray, &Interval::new(0.01, f32::MAX)).is_none())
+    }
+}

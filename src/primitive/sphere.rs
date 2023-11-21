@@ -66,4 +66,45 @@ impl Hittable for Sphere {
     }
 }
 
-impl HittablePrimitive for Sphere {}
+impl HittablePrimitive for Sphere {
+    //
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::material::diffuse::LambertianDiffuse;
+
+    #[test]
+    fn test_intersect() {
+        let sphere = Sphere::new(
+            Vec3::new(0.0, 0.0, 0.0), 1.0,
+            Box::new(LambertianDiffuse::new(Vec3::new(0.0, 0.0, 0.0)))
+        );
+
+        let ray = Ray::new(Vec3::new(0.0, 2.0, 0.0), Vec3::new(0.0, -1.0, 0.0));
+        assert!(sphere.hit(&ray, &Interval::new(0.01, f32::MAX)).is_some())
+    }
+
+    #[test]
+    fn test_intersect_inside() {
+        let sphere = Sphere::new(
+            Vec3::new(0.0, 0.0, 0.0), 1.0,
+            Box::new(LambertianDiffuse::new(Vec3::new(0.0, 0.0, 0.0)))
+        );
+
+        let ray = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, -1.0, 0.0));
+        assert!(sphere.hit(&ray, &Interval::new(0.01, f32::MAX)).is_some())
+    }
+
+    #[test]
+    fn test_miss() {
+        let sphere = Sphere::new(
+            Vec3::new(0.0, 0.0, 0.0), 1.0,
+            Box::new(LambertianDiffuse::new(Vec3::new(0.0, 0.0, 0.0)))
+        );
+
+        let ray = Ray::new(Vec3::new(0.0, 2.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
+        assert!(sphere.hit(&ray, &Interval::new(0.01, f32::MAX)).is_none())
+    }
+}
