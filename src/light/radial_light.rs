@@ -41,8 +41,17 @@ impl RadialLight {
 }
 
 impl Light for RadialLight {
-    fn position(&self) -> Vec3 {
-        self.position + self.sample_light_sphere()
+    fn position(&self, ray_origin: &Vec3) -> Vec3 {
+        let direction = self.position - ray_origin;
+        let direction = direction.normalize();
+        let mut sphere_sample = self.sample_light_sphere();
+
+        // Rays point in same direction -> sampled 'back' of light
+        if direction.dot(&sphere_sample) > 0.0 {
+            sphere_sample = -1.0 * sphere_sample;   // Flip sample to sample 'front' of light
+        }
+
+        self.position + sphere_sample
     }
 
     fn color(&self, light_direction: &Vec3, normal: &Vec3, distance_squared: f32) -> Vec3 {

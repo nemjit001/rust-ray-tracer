@@ -3,7 +3,7 @@ pub mod radial_light;
 use nalgebra_glm::Vec3;
 
 pub trait Light {
-    fn position(&self) -> Vec3;
+    fn position(&self, ray_origin: &Vec3) -> Vec3;
 
     fn falloff_intensity(&self, distance_squared: f32) -> f32 {
         1.0 / distance_squared

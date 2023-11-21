@@ -36,7 +36,7 @@ impl Scene {
         let mut combined_light = Vec3::zeros();
 
         for light in &self.lights {
-            let pl = light.position() - hit.position;
+            let pl = light.position(&hit.position) - hit.position;
             let shadow_ray_direction = pl.normalize();
             let shadow_ray = Ray::new(hit.position, shadow_ray_direction);
 
