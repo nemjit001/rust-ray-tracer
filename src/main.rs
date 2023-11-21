@@ -44,7 +44,7 @@ fn main() {
         &mut window,
         &RendererConfig {
             resolution: render_resolution,
-            sample_count: 1,
+            sample_count: 5,
             max_bounces: 10
         }
     );
@@ -129,13 +129,13 @@ fn main() {
             Box::new(RadialLight::new(
                 Vec3::new(-4.0, 6.0, -3.0),
                 Vec3::new(0.0, 0.3, 0.8),
-                1.0,
+                0.5,
                 50.0,
             )),
             Box::new(RadialLight::new(
                 Vec3::new(5.0, 8.0, -3.0),
                 Vec3::new(1.0, 0.7, 0.2),
-                3.0,
+                0.5,
                 50.0,
             ))
         ]
