@@ -41,11 +41,8 @@ impl Scene {
             let shadow_ray = Ray::new(hit.position, shadow_ray_direction);
 
             let occlusion_object = self.hit(&shadow_ray, interval);
-            match occlusion_object {
-                Some(_hit) => { /* TODO: implement light absorption of partially transparent materials */ },
-                None => {
-                    combined_light += light.color(shadow_ray.direction(), &hit.normal, pl.magnitude_squared());
-                }
+            if let None = occlusion_object {
+                combined_light += light.color(shadow_ray.direction(), &hit.normal, pl.magnitude_squared());
             }
         }
 

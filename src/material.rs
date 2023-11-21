@@ -8,6 +8,11 @@ use nalgebra_glm::Vec3;
 use crate::ray::Ray;
 use crate::ray_hit::RayHit;
 
+pub enum MaterialTransparency {
+    Opaque,
+    Transparent,
+}
+
 pub struct Scatter {
     pub ray: Ray,
     pub attenuation: Vec3,
@@ -15,6 +20,10 @@ pub struct Scatter {
 
 pub trait Material {
     fn scatter(&self, ray: &Ray, hit: &RayHit) -> Option<Scatter>;
+
+    fn material_transparency(&self) -> MaterialTransparency {
+        MaterialTransparency::Opaque
+    }
 
     fn random_vector(&self, min: f32, max: f32) -> Vec3 {
         let mut rng = rand::thread_rng();

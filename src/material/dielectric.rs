@@ -1,7 +1,7 @@
 use nalgebra_glm::Vec3;
 use rand::Rng;
 
-use super::{Material, Scatter};
+use super::{Material, Scatter, MaterialTransparency};
 use crate::ray::Ray;
 use crate::ray_hit::{RayHit, HitType};
 
@@ -46,5 +46,9 @@ impl Material for Dielectric {
             ray: Ray::new(hit.position, ray_direction),
             attenuation: self.albedo,
         })
+    }
+
+    fn material_transparency(&self) -> super::MaterialTransparency {
+        MaterialTransparency::Transparent
     }
 }

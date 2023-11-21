@@ -1,4 +1,3 @@
-pub mod point_light;
 pub mod radial_light;
 
 use nalgebra_glm::Vec3;

@@ -24,12 +24,11 @@ use primitive::{
 use light::radial_light::RadialLight;
 use material::{diffuse::LambertianDiffuse, metal::Metal, dielectric::Dielectric};
 use scene::{SkyAttenuation, Scene};
-use renderer::{Renderer, RenderMode, RendererConfig};
+use renderer::{Renderer, RendererConfig};
 use timer::Timer;
 
 fn main() {
     println!("Raytracing in one Weekend!");
-    let render_mode = RenderMode::Offline;
 
     let mut glfw_ctx = glfw::init(glfw::fail_on_errors!()).expect("Failed to initialize GLFW");
     glfw_ctx.window_hint(glfw::WindowHint::ContextVersion(4, 3));
@@ -40,13 +39,12 @@ fn main() {
     window.make_current();
     window.set_key_polling(true);
 
-    let render_resolution = Resolution::new(1280, 720);
+    let render_resolution = Resolution::new(1280 / 2, 720 / 2);
     let mut renderer = Renderer::new(
         &mut window,
         &RendererConfig {
-            render_mode,
             resolution: render_resolution,
-            sample_count: 256,
+            sample_count: 1,
             max_bounces: 10
         }
     );
@@ -143,28 +141,24 @@ fn main() {
         ]
     );
 
+    timer.tick();
     'main_loop: loop {
         if window.should_close() {
             break 'main_loop;
         }
 
+        timer.tick();
+        println!("Frame time: {:?} ({} FPS)", timer.delta_time(), 1.0 / timer.delta_time_f32());
+
         renderer.render(&camera, &scene);
         window.swap_buffers();
         glfw_ctx.poll_events();
-
-        if let RenderMode::Offline = render_mode {
-            // Directly close window when render mode is offline -> oneshot render
-            window.set_should_close(true);
-        }
 
         for (_, event) in glfw::flush_messages(&receiver) {
             if let glfw::WindowEvent::Key(glfw::Key::Escape, _, glfw::Action::Press, _) = event {
                 window.set_should_close(true)
             }
         }
-
-        timer.tick();
-        println!("Frame time: {:?} ({} FPS)", timer.delta_time(), 1.0 / timer.delta_time_f32());
     }
 
     renderer.save_render(Path::new("result.png"));
