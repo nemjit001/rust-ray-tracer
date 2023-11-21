@@ -1,6 +1,7 @@
 pub mod diffuse;
 pub mod metal;
 pub mod dielectric;
+pub mod emissive;
 
 use rand::Rng;
 use nalgebra_glm::Vec3;
@@ -20,6 +21,10 @@ pub struct Scatter {
 
 pub trait Material {
     fn scatter(&self, ray: &Ray, hit: &RayHit) -> Option<Scatter>;
+
+    fn emit(&self) -> Vec3 {
+        Vec3::zeros()   // By default don't emit light
+    }
 
     fn material_transparency(&self) -> MaterialTransparency {
         MaterialTransparency::Opaque
