@@ -175,13 +175,14 @@ impl RasterPass {
         }
     }
 
-    pub fn execute(&self, render_result: &RgbImage) {
+    pub fn execute(&self, render_image: &RgbImage) {
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
-        let (width, height) = render_result.dimensions();
-        self.render_result.upload_buffer(width, height, &render_result.as_bytes());
+        let (width, height) = render_image.dimensions();
+        self.render_result.upload_buffer(width, height, &render_image.as_bytes());
+
         self.vertex_array_object.bind();
         self.render_result.bind();
         self.pipeline.bind();
