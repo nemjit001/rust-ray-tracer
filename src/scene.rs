@@ -4,6 +4,7 @@ use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::ray_hit::RayHit;
 use crate::primitive::{HittablePrimitive, Hittable};
+use crate::material::MaterialTransparency;
 use crate::light::Light;
 
 pub struct SkyAttenuation {
@@ -40,8 +41,20 @@ impl Scene {
             let shadow_ray_direction = pl.normalize();
             let shadow_ray = Ray::new(hit.position, shadow_ray_direction);
 
-            let occlusion_object = self.hit(&shadow_ray, interval);
-            if let None = occlusion_object {
+            let mut occlusion_hit = None;
+            'occlusion_check: for primtive in &self.primitives
+            {
+                if let Some(hit) = primtive.hit(&shadow_ray, interval) {
+                    occlusion_hit = match hit.material.material_transparency() {
+                        MaterialTransparency::Opaque => Some(hit),
+                        MaterialTransparency::Transparent => Some(hit), // For now (until beer's law can be simulated) have transparent objects also cast shadows
+                    };
+
+                    break 'occlusion_check;
+                }
+            }
+
+            if let None = occlusion_hit {
                 combined_light += light.color(shadow_ray.direction(), &hit.normal, pl.magnitude_squared());
             }
         }
