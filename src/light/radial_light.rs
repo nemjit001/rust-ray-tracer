@@ -33,7 +33,7 @@ impl RadialLight {
         loop {
             let vec = self.random_vector(-1.0, 1.0);
 
-            if vec.magnitude_squared() < 1.0 {
+            if vec.magnitude_squared() < self.radius {
                 return vec * self.radius;
             }
         }
@@ -43,7 +43,6 @@ impl RadialLight {
 impl Light for RadialLight {
     fn position(&self, ray_origin: &Vec3) -> Vec3 {
         let direction = self.position - ray_origin;
-        let direction = direction.normalize();
         let mut sphere_sample = self.sample_light_sphere();
 
         // Rays point in same direction -> sampled 'back' of light

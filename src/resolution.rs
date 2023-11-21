@@ -14,6 +14,10 @@ impl Resolution {
         self.1
     }
 
+    pub fn dimensions(&self) -> (u32, u32) {
+        (self.0, self.1)
+    }
+
     pub fn aspect_ratio(&self) -> f32 {
         self.width() as f32 / self.height() as f32
     }

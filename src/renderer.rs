@@ -44,9 +44,10 @@ impl RayTracingPass {
 
     pub fn execute(&mut self, camera: &Camera, scene: &Scene) {
         let z_interval = camera.scene_depth_interval();
+        let (width, height) = self.resolution.dimensions();
 
-        for y in 0..self.resolution.height() {
-            for x in 0..self.resolution.width() {
+        for y in 0..height {
+            for x in 0..width {
                 let mut sample_sum_color = Vec3::zeros();
 
                 for sample in 0..self.sample_count {
@@ -58,7 +59,7 @@ impl RayTracingPass {
     
                 let color = sample_sum_color / self.sample_count as f32;
                 let color = Self::rgb_to_gamma(color);
-                let color = Self::vec3_to_color(&color);
+                let color = Self::vec3_to_color(color);
                 self.render_target.put_pixel(x, y, color);
             }
         }
@@ -87,14 +88,14 @@ impl RayTracingPass {
 
                 match scatter {
                     Some(scatter) => {
-                        let object_color = scatter.attenuation.component_mul(&self.bounce_ray(&scatter.ray, scene, z_interval, depth - 1));
+                        let object_color = scatter.attenuation.component_mul(
+                            &self.bounce_ray(&scatter.ray, scene, z_interval, depth - 1)
+                        );
 
-                        let light_color = match hit.material.material_transparency() {
-                            MaterialTransparency::Opaque => scene.shadow_ray(&hit, z_interval),
-                            MaterialTransparency::Transparent => Vec3::new(1.0, 1.0, 1.0),
-                        };
-
-                        return object_color.component_mul(&light_color)
+                        match hit.material.material_transparency() {
+                            MaterialTransparency::Opaque => return object_color.component_mul(&scene.shadow_ray(&hit, z_interval)),
+                            MaterialTransparency::Transparent => return object_color,
+                        }
                     },
                     None => return Vec3::zeros(),
                 }
@@ -113,7 +114,7 @@ impl RayTracingPass {
         )
     }
 
-    fn vec3_to_color(color: &Vec3) -> Rgb<u8> {
+    fn vec3_to_color(color: Vec3) -> Rgb<u8> {
         let intensity = Interval::new(0.0, 0.999);
 
         Rgb([

@@ -42,9 +42,9 @@ impl Scene {
             let shadow_ray = Ray::new(hit.position, shadow_ray_direction);
 
             let mut occlusion_hit = None;
-            'occlusion_check: for primtive in &self.primitives
+            'occlusion_check: for primitive in &self.primitives
             {
-                if let Some(hit) = primtive.hit(&shadow_ray, interval) {
+                if let Some(hit) = primitive.hit(&shadow_ray, interval) {
                     occlusion_hit = match hit.material.material_transparency() {
                         MaterialTransparency::Opaque => Some(hit),
                         MaterialTransparency::Transparent => Some(hit), // For now (until beer's law can be simulated) have transparent objects also cast shadows
