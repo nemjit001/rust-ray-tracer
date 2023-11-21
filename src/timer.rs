@@ -22,4 +22,8 @@ impl Timer {
     pub fn delta_time(&self) -> Duration {
         self.delta_time
     }
+
+    pub fn delta_time_f32(&self) -> f32 {
+        self.delta_time.as_secs_f32()
+    }
 }

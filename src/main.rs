@@ -1,3 +1,4 @@
+mod resolution;
 mod camera;
 mod ray;
 mod interval;
@@ -11,9 +12,11 @@ mod timer;
 
 use std::path::Path;
 use nalgebra_glm::Vec3;
+use glfw::{fail_on_errors, Context};
 
+use resolution::Resolution;
 use interval::Interval;
-use camera::{Resolution, Camera, FocusMode};
+use camera::{Camera, FocusMode};
 use primitive::{
     sphere::Sphere,
     plane::Plane,
@@ -21,19 +24,30 @@ use primitive::{
 use light::radial_light::RadialLight;
 use material::{diffuse::LambertianDiffuse, metal::Metal, dielectric::Dielectric};
 use scene::{SkyAttenuation, Scene};
-use renderer::{Renderer, RendererConfig};
+use renderer::{Renderer, RenderMode, RendererConfig};
 use timer::Timer;
 
 fn main() {
     println!("Raytracing in one Weekend!");
+    let render_mode = RenderMode::Offline;
+
+    let mut glfw_ctx = glfw::init(glfw::fail_on_errors!()).expect("Failed to initialize GLFW");
+    glfw_ctx.window_hint(glfw::WindowHint::ContextVersion(4, 3));
+    glfw_ctx.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+    glfw_ctx.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
+
+    let (mut window, receiver) = glfw_ctx.create_window(1280, 720, "Rust Raytracer", glfw::WindowMode::Windowed).expect("Failed to create window");
+    window.make_current();
+    window.set_key_polling(true);
 
     let render_resolution = Resolution::new(1280, 720);
-
     let mut renderer = Renderer::new(
-        &render_resolution,
+        &mut window,
         &RendererConfig {
-            sample_count: 1,
-            max_bounces: 25
+            render_mode,
+            resolution: render_resolution,
+            sample_count: 256,
+            max_bounces: 10
         }
     );
 
@@ -42,7 +56,7 @@ fn main() {
         Vec3::new(0.0, 1.0, 0.0),
         60.0,
         FocusMode::AutoFocus,
-        0.0,
+        1.5,
         Interval::new(0.001, 100.0),
         &render_resolution
     );
@@ -95,6 +109,17 @@ fn main() {
                 0.25,
                 Box::new(Dielectric::new(Vec3::new(0.2, 1.0, 1.0), 2.17))
             )),
+            Box::new(Sphere::new(
+                Vec3::new(2.0, 2.0, -10.0),
+                2.0,
+                Box::new(LambertianDiffuse::new(Vec3::new(0.7, 0.2, 0.1)))
+            )),
+
+            Box::new(Sphere::new(
+                Vec3::new(-5.0, 2.0, -10.0),
+                2.0,
+                Box::new(LambertianDiffuse::new(Vec3::new(0.2, 0.7, 0.1)))
+            )),
         ],
         vec![
             Box::new(RadialLight::new(
@@ -112,16 +137,35 @@ fn main() {
             Box::new(RadialLight::new(
                 Vec3::new(5.0, 8.0, -3.0),
                 Vec3::new(1.0, 0.7, 0.2),
-                0.5,
+                3.0,
                 50.0,
             ))
         ]
     );
 
-    renderer.render(&camera, &scene);
-    timer.tick();
+    'main_loop: loop {
+        if window.should_close() {
+            break 'main_loop;
+        }
+
+        renderer.render(&camera, &scene);
+        window.swap_buffers();
+        glfw_ctx.poll_events();
+
+        if let RenderMode::Offline = render_mode {
+            // Directly close window when render mode is offline -> oneshot render
+            window.set_should_close(true);
+        }
+
+        for (_, event) in glfw::flush_messages(&receiver) {
+            if let glfw::WindowEvent::Key(glfw::Key::Escape, _, glfw::Action::Press, _) = event {
+                window.set_should_close(true)
+            }
+        }
+
+        timer.tick();
+        println!("Frame time: {:?} ({} FPS)", timer.delta_time(), 1.0 / timer.delta_time_f32());
+    }
 
     renderer.save_render(Path::new("result.png"));
-
-    println!("Frame time: {:?}", timer.delta_time());
 }
