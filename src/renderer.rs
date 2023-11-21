@@ -18,7 +18,14 @@ use crate::primitive::Hittable;
 use crate::scene::Scene;
 
 #[derive(Clone, Copy)]
+pub enum RenderMode {
+    Offline,
+    Online,
+}
+
+#[derive(Clone, Copy)]
 pub struct RendererConfig {
+    pub render_mode: RenderMode,
     pub resolution: Resolution,
     pub sample_count: u32,
     pub max_bounces: u32,
@@ -133,7 +140,9 @@ impl Renderer {
             }
         }
 
-        self.raster_pass.execute(&self.render_target);
+        if let RenderMode::Online = self.config.render_mode {
+            self.raster_pass.execute(&self.render_target);
+        }
     }
 
     pub fn save_render(&self, path: &Path) {
