@@ -44,7 +44,7 @@ fn main() {
         &mut window,
         &RendererConfig {
             resolution: render_resolution,
-            sample_count: 2,
+            sample_count: 5,
             max_bounces: 10
         }
     );
