@@ -39,13 +39,13 @@ fn main() {
     window.make_current();
     window.set_key_polling(true);
 
-    let render_resolution = Resolution::new(1280, 720);
+    let render_resolution = Resolution::new(640, 360);
     let mut renderer = Renderer::new(
         &mut window,
         &RendererConfig {
             resolution: render_resolution,
-            sample_count: 1,
-            max_bounces: 25
+            sample_count: 5,
+            max_bounces: 10
         }
     );
 

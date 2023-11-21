@@ -2,11 +2,12 @@ mod gl_layer;
 
 use std::path::Path;
 use nalgebra_glm::Vec3;
-use image::{RgbImage, ImageBuffer, Rgb};
+use image::{RgbImage, ImageBuffer, Rgb, EncodableLayout};
 
 use gl_layer::{
     vertex_array::VertexArray,
-    shaders::{ShaderType, Shader, ShaderPipeline}
+    shaders::{ShaderType, Shader, ShaderPipeline},
+    textures::Texture
 };
 
 use crate::resolution::Resolution;
@@ -26,10 +27,11 @@ pub struct RendererConfig {
 struct RasterPass {
     vertex_array_object: VertexArray,
     pipeline: ShaderPipeline,
+    render_result: Texture,
 }
 
 impl RasterPass {
-    pub fn new() -> Self {
+    pub fn new(render_resolution: &Resolution) -> Self {
         let vertex_shader = Shader::new(
             ShaderType::Vertex,
             r#"
@@ -52,28 +54,36 @@ impl RasterPass {
             in vec2 screen_uv;
             out vec4 frag_color;
 
+            uniform sampler2D screen_texture;
+
             void main() {
-                frag_color = vec4(screen_uv, 0, 1);
+                // FLip screen UV space
+                vec2 tex_uv = (screen_uv * vec2(1, -1)) + vec2(0, 2);
+                frag_color = texture(screen_texture, tex_uv);
             }
             "#
         );
 
         let vertex_array_object = VertexArray::new();
         let pipeline = ShaderPipeline::new(&[vertex_shader, fragment_shader]);
+        let render_result = Texture::new(render_resolution.width(), render_resolution.height());
 
         RasterPass {
             vertex_array_object,
-            pipeline
+            pipeline,
+            render_result,
         }
     }
 
-    pub fn execute(&self) {
+    pub fn execute(&self, render_result: &RgbImage) {
         unsafe {
-            gl::Clear(gl::COLOR);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
-        // TODO: bind texture for use
+        let (width, height) = render_result.dimensions();
+        self.render_result.upload_buffer(width, height, &render_result.as_bytes());
         self.vertex_array_object.bind();
+        self.render_result.bind();
         self.pipeline.bind();
 
         unsafe {
@@ -93,7 +103,7 @@ impl Renderer {
         gl_layer::init(window);
 
         let render_target: RgbImage = ImageBuffer::new(config.resolution.width(), config.resolution.height());
-        let raster_pass = RasterPass::new();
+        let raster_pass = RasterPass::new(&config.resolution);
 
         Renderer {
             config: *config,
@@ -123,7 +133,7 @@ impl Renderer {
             }
         }
 
-        self.raster_pass.execute();
+        self.raster_pass.execute(&self.render_target);
     }
 
     pub fn save_render(&self, path: &Path) {
