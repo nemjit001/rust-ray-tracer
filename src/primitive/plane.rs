@@ -6,8 +6,14 @@ use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::material::Material;
 
+pub struct Plane {
+    position: Vec3,
+    normal: Vec3,
+    material: Box<dyn Material + Sync>,
+}
+
 impl Plane {
-    pub fn new(position: Vec3, normal: Vec3, material: Box<dyn Material>) -> Self {
+    pub fn new(position: Vec3, normal: Vec3, material: Box<dyn Material + Sync>) -> Self {
         Plane {
             position,
             normal,
@@ -57,11 +63,11 @@ pub struct Rectangle {
     position: Vec3,
     normal: Vec3,
     basis_vectors: (Vec3, Vec3),
-    material: Box<dyn Material>,
+    material: Box<dyn Material + Sync>,
 }
 
 impl Rectangle {
-    pub fn new(position: Vec3, normal: Vec3, width: f32, height: f32, material: Box<dyn Material>) -> Self {
+    pub fn new(position: Vec3, normal: Vec3, width: f32, height: f32, material: Box<dyn Material + Sync>) -> Self {
         Rectangle {
             position,
             normal,
@@ -113,12 +119,6 @@ impl Hittable for Rectangle {
 
 impl HittablePrimitive for Rectangle {
     //
-}
-
-pub struct Plane {
-    position: Vec3,
-    normal: Vec3,
-    material: Box<dyn Material>,
 }
 
 #[cfg(test)]

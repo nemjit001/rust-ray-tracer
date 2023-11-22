@@ -10,11 +10,11 @@ pub struct Sphere {
     position: Vec3,
     radius: f32,
     radius_squared: f32,
-    material: Box<dyn Material>,
+    material: Box<dyn Material + Sync>,
 }
 
 impl Sphere {
-    pub fn new(position: Vec3, radius: f32, material: Box<dyn Material>) -> Self {
+    pub fn new(position: Vec3, radius: f32, material: Box<dyn Material + Sync>) -> Self {
         Sphere {
             position,
             radius,

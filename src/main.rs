@@ -38,7 +38,7 @@ fn main() {
     let mut renderer = Renderer::new(
         RendererConfig {
             resolution: render_resolution,
-            sample_count: 1000,
+            sample_count: 100,
             max_bounces: 50
         }
     );

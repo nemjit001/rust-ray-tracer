@@ -14,12 +14,12 @@ pub struct SkyAttenuation {
 
 pub struct Scene {
     sky_attenuation: SkyAttenuation,
-    primitives: Vec<Box<dyn HittablePrimitive>>,
-    lights: Vec<Box<dyn Light>>,
+    primitives: Vec<Box<dyn HittablePrimitive + Sync>>,
+    lights: Vec<Box<dyn Light + Sync>>,
 }
 
 impl Scene {
-    pub fn new(sky_attenuation: SkyAttenuation, primitives: Vec<Box<dyn HittablePrimitive>>, lights: Vec<Box<dyn Light>>) -> Self {
+    pub fn new(sky_attenuation: SkyAttenuation, primitives: Vec<Box<dyn HittablePrimitive + Sync>>, lights: Vec<Box<dyn Light + Sync>>) -> Self {
         Scene {
             sky_attenuation,
             primitives,

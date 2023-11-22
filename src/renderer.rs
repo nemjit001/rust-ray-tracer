@@ -30,6 +30,35 @@ impl Renderer {
         }
     }
 
+    #[cfg(feature = "parallel")]
+    pub fn render(&mut self, camera: &Camera, scene: &Scene) {
+        use rayon::prelude::*;
+
+        let z_interval = camera.scene_depth_interval();
+        let (width, height) = self.config.resolution.dimensions();
+
+        let render_output = std::sync::Mutex::new(&mut self.render_target);
+        (0..height).into_par_iter().for_each(|y| {
+            (0..width).into_par_iter().for_each(|x| {
+                let mut sample_sum_color = Vec3::zeros();
+
+                for sample in 0..self.config.sample_count {
+                    let ray = camera.get_primary_ray(x, y, sample);
+                    let color = Self::bounce_ray(&ray, scene, z_interval, self.config.max_bounces);
+
+                    sample_sum_color += color;
+                }
+    
+                let color = sample_sum_color / self.config.sample_count as f32;
+                let color = Self::rgb_to_gamma(color);
+                let color = Self::vec3_to_color(color);
+                
+                render_output.lock().unwrap().put_pixel(x, y, color);
+            })
+        })
+    }
+
+    #[cfg(feature = "single_threaded")]
     pub fn render(&mut self, camera: &Camera, scene: &Scene) {
         let z_interval = camera.scene_depth_interval();
         let (width, height) = self.config.resolution.dimensions();
@@ -39,7 +68,7 @@ impl Renderer {
                 let mut sample_sum_color = Vec3::zeros();
 
                 for sample in 0..self.config.sample_count {
-                    let ray = self.get_ray(camera, x, y, sample);
+                    let ray = camera.get_primary_ray(x, y, sample);
                     let color = Self::bounce_ray(&ray, scene, z_interval, self.config.max_bounces);
 
                     sample_sum_color += color;
@@ -55,17 +84,6 @@ impl Renderer {
 
     pub fn save_render(&self, path: &Path) {
         self.render_target.save(path).expect("Failed to save output image");
-    }
-
-    fn get_ray(&self, camera: &Camera, x: u32, y: u32, sample: u32) -> Ray {
-        let pixel_center = camera.get_pixel_center(x, y);
-        let pixel_sample = camera.sample_pixel(pixel_center, sample);
-
-        let ray_origin = camera.get_ray_origin();
-        let ray_direction = pixel_sample - ray_origin;
-        let ray_direction = ray_direction.normalize();
-
-        Ray::new(ray_origin, ray_direction)
     }
 
     fn bounce_ray(ray: &Ray, scene: &Scene, z_interval: &Interval, depth: u32) -> Vec3 {

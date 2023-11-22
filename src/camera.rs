@@ -3,12 +3,13 @@ use rand::{thread_rng, Rng};
 
 use crate::resolution::Resolution;
 use crate::interval::Interval;
+use crate::ray::Ray;
 
 // const WORLD_FORWARD: Vec3   = Vec3::new(0.0, 0.0, 1.0);
 // const WORLD_RIGHT: Vec3     = Vec3::new(1.0, 0.0, 0.0);
 const WORLD_UP: Vec3        = Vec3::new(0.0, 1.0, 0.0);
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct PixelDelta(Vec3, Vec3);
 
 impl PixelDelta {
@@ -25,7 +26,7 @@ impl PixelDelta {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct ViewPlane {
     viewport_top_left: Vec3,
     pixel_delta: PixelDelta,
@@ -55,6 +56,7 @@ impl ViewPlane {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 struct DefocusDisk {
     angle: f32,
     radius: f32,
@@ -99,6 +101,7 @@ impl DefocusDisk {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 struct CameraVectors {
     forward: Vec3,
     up: Vec3,
@@ -123,6 +126,7 @@ pub enum FocusMode {
     Manual(f32),
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Camera {
     position: Vec3,
     scene_depth: Interval,
@@ -163,11 +167,22 @@ impl Camera {
         &self.scene_depth
     }
 
-    pub fn get_pixel_center(&self, x: u32, y: u32) -> Vec3 {
+    pub fn get_primary_ray(&self, x: u32, y: u32, sample: u32) -> Ray {
+        let pixel_center = self.get_pixel_center(x, y);
+        let pixel_sample = self.sample_pixel(pixel_center, sample);
+
+        let ray_origin = self.get_ray_origin();
+        let ray_direction = pixel_sample - ray_origin;
+        let ray_direction = ray_direction.normalize();
+
+        Ray::new(ray_origin, ray_direction)
+    }
+
+    fn get_pixel_center(&self, x: u32, y: u32) -> Vec3 {
         self.view_plane.get_pixel_center(x as f32, y as f32)
     }
 
-    pub fn sample_pixel(&self, pixel_center: Vec3, _sample_num: u32) -> Vec3 {
+    fn sample_pixel(&self, pixel_center: Vec3, _sample_num: u32) -> Vec3 {
         // Sampling is random for now -> use AA sample grid for consistent sampling
         let mut rng = thread_rng();
 
@@ -178,7 +193,7 @@ impl Camera {
         pixel_center + sample_offset
     }
 
-    pub fn get_ray_origin(&self) -> Vec3 {
+    fn get_ray_origin(&self) -> Vec3 {
         if self.defocus_disk.angle() <= 0.0 {
             self.position
         }
