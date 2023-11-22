@@ -37,24 +37,24 @@ impl Renderer {
         let z_interval = camera.scene_depth_interval();
         let (width, height) = self.config.resolution.dimensions();
 
+        let one_over_sample_count = 1.0 / self.config.sample_count as f32;
         let render_output = std::sync::Mutex::new(&mut self.render_target);
         (0..height).into_par_iter().for_each(|y| {
-            (0..width).into_par_iter().for_each(|x| {
-                let mut sample_sum_color = Vec3::zeros();
+            for x in 0..width {
+                let mut sample_color = Vec3::zeros();
 
                 for sample in 0..self.config.sample_count {
                     let ray = camera.get_primary_ray(x, y, sample);
                     let color = Self::bounce_ray(&ray, scene, z_interval, self.config.max_bounces);
 
-                    sample_sum_color += color;
+                    sample_color += color;
                 }
     
-                let color = sample_sum_color / self.config.sample_count as f32;
-                let color = Self::rgb_to_gamma(color);
+                let color = Self::rgb_to_gamma(sample_color * one_over_sample_count);
                 let color = Self::vec3_to_color(color);
                 
                 render_output.lock().unwrap().put_pixel(x, y, color);
-            })
+            }
         })
     }
 

@@ -39,7 +39,7 @@ fn main() {
         RendererConfig {
             resolution: render_resolution,
             sample_count: 100,
-            max_bounces: 50
+            max_bounces: 10
         }
     );
 
